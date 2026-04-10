@@ -3,16 +3,16 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Role } from './Sidebar';
-import { Activity, Users, Calendar, Zap, ArrowRight, Star, Map as MapIcon, Ticket } from 'lucide-react';
+import { Activity, Users, Calendar, Zap, ArrowRight, Star, Map as MapIcon, Ticket, FlaskConical, Dumbbell, Wrench } from 'lucide-react';
 
-export function Dashboard({ role }: { role: Role }) {
+export function Dashboard({ role, setActiveTab, username }: { role: Role, setActiveTab: (tab: string) => void, username: string }) {
   return (
     <div className="p-8 space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-white tracking-tight">
-            Welcome to <span className="text-brand-pink-glow drop-shadow-[0_0_10px_rgba(255,0,127,0.8)]">Nexora Campus</span>, <span className="text-brand-gold">
-              {role === 'Student' ? 'Alex' : role === 'Faculty' ? 'Dr. Sarah' : 'Marcus'}
+            Welcome to <span className="text-brand-pink-glow drop-shadow-[0_0_10px_rgba(255,0,127,0.8)]">Nexora Campus</span>, <span className="text-brand-gold capitalize">
+              {username}
             </span>
           </h2>
           <p className="text-gray-400 mt-1">Here's what's happening on campus today.</p>
@@ -117,24 +117,10 @@ export function Dashboard({ role }: { role: Role }) {
           <div className="glass-card rounded-2xl p-6">
             <h3 className="text-xl font-bold text-white mb-6">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-4">
-              <ActionButton icon={Calendar} label="Book Slot" />
-              <ActionButton icon={MapIcon} label="View Map" />
-              <ActionButton icon={Ticket} label="My Pass" />
-              <ActionButton icon={Activity} label="History" />
-            </div>
-          </div>
-
-          <div className="glass-card rounded-2xl p-6 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-purple/20 to-brand-pink-glow/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <h3 className="text-lg font-bold text-white mb-2 relative z-10">Predictive Crowd</h3>
-            <p className="text-sm text-gray-400 mb-4 relative z-10">Library will reach 90% capacity in 45 mins.</p>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden relative z-10">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: '75%' }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-brand-purple to-brand-pink-glow"
-              />
+              <ActionButton icon={FlaskConical} label="Book Lab" onClick={() => setActiveTab('labs')} />
+              <ActionButton icon={Dumbbell} label="Book Gym" onClick={() => setActiveTab('gym')} />
+              <ActionButton icon={Wrench} label="Equipment" onClick={() => setActiveTab('equipment')} />
+              <ActionButton icon={Activity} label="History" onClick={() => setActiveTab('history')} />
             </div>
           </div>
         </div>
@@ -194,9 +180,9 @@ function RecommendationCard({ title, time, reason, match }: any) {
   );
 }
 
-function ActionButton({ icon: Icon, label }: any) {
+function ActionButton({ icon: Icon, label, onClick }: any) {
   return (
-    <button className="flex flex-col items-center justify-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-brand-pink-glow/50 transition-all group">
+    <button onClick={onClick} className="flex flex-col items-center justify-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-brand-pink-glow/50 transition-all group">
       <Icon size={24} className="text-gray-400 group-hover:text-brand-pink-glow transition-colors" />
       <span className="text-sm font-medium text-gray-300 group-hover:text-white">{label}</span>
     </button>

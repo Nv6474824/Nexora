@@ -1,18 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, XCircle, Clock, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, AlertTriangle, ShieldAlert, Check } from 'lucide-react';
+import { getBookings, updateBookingStatus, Booking } from '@/lib/bookings';
+import { getQueries, resolveQuery, markQueryPending, Query } from '@/lib/queries';
 
 export function AdminPanel() {
-  const [requests, setRequests] = useState([
-    { id: 1, user: 'Alex Carter', type: 'Booking', detail: 'Main Auditorium (Oct 15)', status: 'pending', time: '10 mins ago' },
-    { id: 2, user: 'Dr. Sarah Chen', type: 'Priority Override', detail: 'Advanced AI Lab', status: 'pending', time: '1 hour ago' },
-    { id: 3, user: 'John Doe', type: 'Query', detail: 'ID Card Replacement', status: 'pending', time: '2 hours ago' },
-  ]);
+  const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
+  const [allQueries, setAllQueries] = useState<Query[]>([]);
 
-  const handleAction = (id: number, action: 'approve' | 'reject') => {
-    setRequests(prev => prev.filter(req => req.id !== id));
+  useEffect(() => {
+    setPendingBookings(getBookings().filter(b => b.status === 'pending'));
+    setAllQueries(getQueries());
+  }, []);
+
+  const handleBookingAction = (id: string, action: 'approved' | 'rejected') => {
+    updateBookingStatus(id, action);
+    setPendingBookings(getBookings().filter(b => b.status === 'pending'));
+  };
+
+  const handleQueryAction = (id: string, action: 'resolve' | 'pending') => {
+    if (action === 'resolve') {
+      resolveQuery(id);
+    } else {
+      markQueryPending(id);
+    }
+    setAllQueries(getQueries());
   };
 
   return (
@@ -26,20 +40,20 @@ export function AdminPanel() {
         <div className="lg:col-span-2 space-y-6">
           <div className="glass-card rounded-2xl p-6">
             <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <ShieldAlert className="text-brand-pink-glow" /> Pending Requests
+              <ShieldAlert className="text-brand-pink-glow" /> Pending Booking Requests
             </h3>
             
             <div className="space-y-4">
               <AnimatePresence>
-                {requests.length === 0 ? (
+                {pendingBookings.length === 0 ? (
                   <motion.div 
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     className="text-center py-8 text-gray-500"
                   >
-                    No pending requests.
+                    No pending booking requests.
                   </motion.div>
                 ) : (
-                  requests.map((req) => (
+                  pendingBookings.map((req) => (
                     <motion.div
                       key={req.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -50,29 +64,95 @@ export function AdminPanel() {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs font-bold px-2 py-1 rounded bg-white/10 text-brand-gold uppercase tracking-wider">
-                            {req.type}
+                            Booking
+                          </span>
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <Clock size={12} /> {req.date} • {req.time}
+                          </span>
+                        </div>
+                        <h4 className="font-bold text-white">{req.userId}</h4>
+                        <p className="text-sm text-gray-400">{req.resource}</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => handleBookingAction(req.id, 'rejected')}
+                          className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                        >
+                          <XCircle size={20} />
+                        </button>
+                        <button 
+                          onClick={() => handleBookingAction(req.id, 'approved')}
+                          className="p-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors"
+                        >
+                          <CheckCircle2 size={20} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          <div className="glass-card rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <AlertTriangle className="text-brand-purple" /> User Queries
+            </h3>
+            
+            <div className="space-y-4">
+              <AnimatePresence>
+                {allQueries.length === 0 ? (
+                  <motion.div 
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="text-center py-8 text-gray-500"
+                  >
+                    No queries found.
+                  </motion.div>
+                ) : (
+                  allQueries.map((req) => (
+                    <motion.div
+                      key={req.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -50 }}
+                      className={`p-4 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                        req.status === 'resolved' 
+                          ? 'bg-green-500/5 border-green-500/20' 
+                          : 'bg-white/5 border-white/10'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${
+                            req.status === 'resolved' ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-brand-purple'
+                          }`}>
+                            {req.status}
                           </span>
                           <span className="text-xs text-gray-500 flex items-center gap-1">
                             <Clock size={12} /> {req.time}
                           </span>
                         </div>
                         <h4 className="font-bold text-white">{req.user}</h4>
-                        <p className="text-sm text-gray-400">{req.detail}</p>
+                        <p className="text-sm text-gray-400">{req.text}</p>
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => handleAction(req.id, 'reject')}
-                          className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                        >
-                          <XCircle size={20} />
-                        </button>
-                        <button 
-                          onClick={() => handleAction(req.id, 'approve')}
-                          className="p-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors"
-                        >
-                          <CheckCircle2 size={20} />
-                        </button>
+                        {req.status === 'pending' ? (
+                          <button 
+                            onClick={() => handleQueryAction(req.id, 'resolve')}
+                            className="px-4 py-2 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-colors text-sm font-bold flex items-center gap-2"
+                          >
+                            <Check size={16} /> Mark Solved
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => handleQueryAction(req.id, 'pending')}
+                            className="px-4 py-2 rounded-lg bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/20 transition-colors text-sm font-bold flex items-center gap-2"
+                          >
+                            <Clock size={16} /> Mark Pending
+                          </button>
+                        )}
                       </div>
                     </motion.div>
                   ))

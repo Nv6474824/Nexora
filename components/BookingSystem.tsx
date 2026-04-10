@@ -3,22 +3,27 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Role } from './Sidebar';
-import { Calendar as CalendarIcon, Clock, MapPin, Star, CheckCircle2, AlertCircle, Zap } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, Star, CheckCircle2, AlertCircle, Zap, Check, X } from 'lucide-react';
 import Image from 'next/image';
+import { addBooking, getBookings, updateBookingStatus, Booking } from '@/lib/bookings';
 
 interface BookingSystemProps {
   role: Role;
   resourceType: string; // 'gym', 'labs', 'library', 'auditorium', 'equipment'
+  username: string;
 }
 
-export function BookingSystem({ role, resourceType }: BookingSystemProps) {
+export function BookingSystem({ role, resourceType, username }: BookingSystemProps) {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [bgImage, setBgImage] = useState('');
+  const [allBookings, setAllBookings] = useState<Booking[]>([]);
 
   useEffect(() => {
+    setAllBookings(getBookings());
+    
     // Set a dynamic background image based on resource type using high-quality Unsplash photos
     const imageMap: Record<string, string> = {
       gym: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=80',
@@ -39,10 +44,31 @@ export function BookingSystem({ role, resourceType }: BookingSystemProps) {
   ];
 
   const handleBook = () => {
+    const slotDetails = slots.find(s => s.id === selectedSlot);
+    if (!slotDetails) return;
+
+    // Add booking to global state
+    addBooking({
+      resource: resourceType.charAt(0).toUpperCase() + resourceType.slice(1),
+      date: new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      time: slotDetails.time,
+      status: 'pending', // Starts as pending for admin approval
+      duration: '1h',
+      userId: username
+    });
+
+    setAllBookings(getBookings()); // Refresh local state
     setShowConfirm(false);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
   };
+
+  const handleAdminAction = (id: string, newStatus: 'approved' | 'rejected') => {
+    updateBookingStatus(id, newStatus);
+    setAllBookings(getBookings());
+  };
+
+  const pendingBookings = allBookings.filter(b => b.status === 'pending' && b.resource.toLowerCase() === resourceType.toLowerCase());
 
   return (
     <div className="relative min-h-[calc(100vh-80px)] p-8">
@@ -56,7 +82,7 @@ export function BookingSystem({ role, resourceType }: BookingSystemProps) {
             className="object-cover opacity-20 mix-blend-overlay"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
         </div>
       )}
 
@@ -148,7 +174,7 @@ export function BookingSystem({ role, resourceType }: BookingSystemProps) {
                         : 'bg-white/10 text-gray-500 cursor-not-allowed'
                     }`}
                   >
-                    Confirm Booking
+                    Request Booking
                   </button>
                 </div>
               )}
@@ -178,15 +204,43 @@ export function BookingSystem({ role, resourceType }: BookingSystemProps) {
             
             {role === 'Admin' && (
               <div className="glass-card rounded-2xl p-6 border-brand-pink-glow/30">
-                <h3 className="text-lg font-bold text-white mb-4">Admin Controls</h3>
-                <div className="space-y-3">
-                  <button className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-white transition-colors">
-                    Disable Resource
-                  </button>
-                  <button className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-white transition-colors">
-                    Override Bookings
-                  </button>
-                </div>
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center justify-between">
+                  Pending Requests
+                  {pendingBookings.length > 0 && (
+                    <span className="bg-brand-pink-glow text-white text-xs px-2 py-1 rounded-full">{pendingBookings.length}</span>
+                  )}
+                </h3>
+                
+                {pendingBookings.length === 0 ? (
+                  <p className="text-sm text-gray-400 text-center py-4">No pending requests for this resource.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingBookings.map(booking => (
+                      <div key={booking.id} className="p-3 bg-white/5 border border-white/10 rounded-xl">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="text-sm font-bold text-white">{booking.userId} Request</p>
+                            <p className="text-xs text-gray-400">{booking.date} • {booking.time}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 mt-3">
+                          <button 
+                            onClick={() => handleAdminAction(booking.id, 'approved')}
+                            className="flex-1 py-1.5 bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+                          >
+                            <Check size={14} /> Approve
+                          </button>
+                          <button 
+                            onClick={() => handleAdminAction(booking.id, 'rejected')}
+                            className="flex-1 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+                          >
+                            <X size={14} /> Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

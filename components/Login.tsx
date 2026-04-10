@@ -7,7 +7,7 @@ import { Role } from './Sidebar';
 import Image from 'next/image';
 
 interface LoginProps {
-  onLogin: (role: Role) => void;
+  onLogin: (role: Role, username: string) => void;
 }
 
 export function Login({ onLogin }: LoginProps) {
@@ -48,14 +48,14 @@ export function Login({ onLogin }: LoginProps) {
     const expectedUsername = selectedRole.toLowerCase();
     
     if (username === expectedUsername && password === 'password') {
-      onLogin(selectedRole);
+      onLogin(selectedRole, username);
     } else {
       setError(`Invalid credentials. Try username: '${expectedUsername}' and password: 'password'`);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center relative overflow-hidden p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden p-4">
       {/* Background Effects */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <Image 
@@ -65,7 +65,7 @@ export function Login({ onLogin }: LoginProps) {
           className="object-cover opacity-30 mix-blend-luminosity"
           referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/80 via-[#050505]/60 to-[#050505]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-brand-purple/20 blur-[150px]" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-brand-pink-glow/10 blur-[150px]" />
       </div>

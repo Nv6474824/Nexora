@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, Bot, User, Send } from 'lucide-react';
 
-export function QuerySystem() {
+export function QuerySystem({ username }: { username: string }) {
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState([
     { id: 1, type: 'bot', text: 'Hello! I am the Nexora AI Assistant. How can I help you today?' }

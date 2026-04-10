@@ -54,31 +54,7 @@ export function Settings() {
         </div>
 
         <div className="space-y-6">
-          {/* Appearance */}
-          <div className="glass-card rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-lg bg-brand-gold/20 text-brand-gold">
-                <Eye size={20} />
-              </div>
-              <h3 className="text-xl font-bold text-white">Appearance</h3>
-            </div>
-            
-            <div className="space-y-3">
-              <button className="w-full flex items-center justify-between p-3 rounded-xl bg-white/10 border border-brand-pink-glow/50 text-white">
-                <div className="flex items-center gap-3">
-                  <Monitor size={18} className="text-brand-pink-glow" />
-                  <span>Dark Mode</span>
-                </div>
-                <div className="w-4 h-4 rounded-full bg-brand-pink-glow" />
-              </button>
-              <button className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
-                <div className="flex items-center gap-3">
-                  <Smartphone size={18} />
-                  <span>System Default</span>
-                </div>
-              </button>
-            </div>
-          </div>
+          {/* Removed Appearance Section */}
         </div>
       </div>
     </div>

@@ -21,10 +21,13 @@ import { Settings } from '@/components/Settings';
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [role, setRole] = useState<Role>('Student');
+  const [username, setUsername] = useState('Alex Carter');
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isLightMode, setIsLightMode] = useState(false);
 
-  const handleLogin = (selectedRole: Role) => {
+  const handleLogin = (selectedRole: Role, loggedInUsername: string) => {
     setRole(selectedRole);
+    setUsername(loggedInUsername);
     setActiveTab('dashboard');
     setIsLoggedIn(true);
   };
@@ -36,7 +39,7 @@ export default function Home() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard role={role} />;
+        return <Dashboard role={role} setActiveTab={setActiveTab} username={username} />;
       case 'announcements':
         return <Announcements />;
       case 'admin-requests':
@@ -48,19 +51,17 @@ export default function Home() {
       case 'library':
       case 'auditorium':
       case 'equipment':
-        return <BookingSystem role={role} resourceType={activeTab} />;
+        return <BookingSystem role={role} resourceType={activeTab} username={username} />;
       case 'history':
         return <History />;
-      case 'mypass':
-        return <MyPass />;
       case 'idcard':
-        return <IDCard role={role} />;
+        return <IDCard role={role} username={username} />;
       case 'about':
         return <AboutUs />;
       case 'contact':
         return <ContactUs />;
       case 'query':
-        return <QuerySystem />;
+        return <QuerySystem username={username} />;
       case 'settings':
         return <Settings />;
       default:
@@ -81,17 +82,23 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex">
+    <div className={`min-h-screen bg-background text-foreground flex ${isLightMode ? 'light-mode' : ''}`}>
       {/* Background Effects */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-purple/20 blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-brand-pink-glow/10 blur-[120px]" />
       </div>
 
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} role={role} />
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        role={role} 
+        isLightMode={isLightMode}
+        toggleTheme={() => setIsLightMode(!isLightMode)}
+      />
       
       <div className="flex-1 flex flex-col relative z-10">
-        <Topbar role={role} setRole={setRole} />
+        <Topbar role={role} username={username} />
         
         <main className="flex-1 overflow-y-auto custom-scrollbar ml-64">
           {renderContent()}
