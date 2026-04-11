@@ -3,7 +3,7 @@ import './globals.css'; // Global styles
 
 export const metadata: Metadata = {
   title: 'My Google AI Studio App',
-  description: 'My Google AI Studio App',
+  description: 'Nexora',
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
